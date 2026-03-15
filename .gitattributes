@@ -1,0 +1,50 @@
+# Auto detect text files and perform LF normalization
+* text=auto eol=lf
+
+# TypeScript/JavaScript files
+*.ts text diff=typescript
+*.tsx text diff=typescript
+*.js text
+*.jsx text
+*.mjs text
+*.cjs text
+
+# Documents
+*.md text diff=markdown
+*.txt text
+*.csv text
+*.json text linguist-language=JSON
+*.xml text
+*.yaml text
+*.yml text
+
+# Config files
+*.config.js text
+*.config.ts text
+.eslintrc text
+.prettierrc text
+tsconfig.json text
+
+# Scripts
+*.sh text eol=lf
+*.bash text eol=lf
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
+
+# Graphics
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.svg text
+
+# Archives
+*.zip binary
+*.gz binary
+*.tar binary
+
+# Lock files
+package-lock.json text -diff
+yarn.lock text -diff

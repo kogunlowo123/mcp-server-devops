@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>mcp-server-devops — Architecture</title>
+<style>
+:root{--ink:#0b0c0b;--paper:#f5f2eb;--accent:#c8420a;--accent2:#e8720c;--mono:'Courier New',monospace;--sans:system-ui,-apple-system,sans-serif}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--ink);color:var(--paper);font-family:var(--mono);font-size:13px;line-height:1.7}
+.container{max-width:1100px;margin:0 auto;padding:32px 48px}
+header{border-bottom:2px solid var(--accent);padding-bottom:24px;margin-bottom:32px}
+h1{font-size:28px;font-family:var(--sans);font-weight:700}h1 em{font-style:normal;color:var(--accent)}
+.meta{font-size:10px;color:rgba(255,255,255,.4);margin-top:6px}
+.badge{display:inline-block;font-size:9px;padding:2px 8px;border-radius:2px;margin-right:4px}
+.badge-lang{background:rgba(200,66,10,.2);color:var(--accent);border:1px solid rgba(200,66,10,.4)}
+.badge-cloud{background:rgba(255,255,255,.06);color:rgba(255,255,255,.5);border:1px solid rgba(255,255,255,.1)}
+.badge-cat{background:rgba(232,114,12,.15);color:var(--accent2);border:1px solid rgba(232,114,12,.3)}
+h2{font-size:16px;font-family:var(--sans);color:var(--accent);margin:32px 0 12px;padding-bottom:6px;border-bottom:1px solid rgba(200,66,10,.3);text-transform:uppercase}
+p,li{font-size:12px;line-height:1.8;color:rgba(255,255,255,.75)}
+ul{padding-left:20px;margin:8px 0}
+.card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin:16px 0}
+.card{border:1px solid rgba(255,255,255,.1);border-radius:4px;padding:16px;background:rgba(255,255,255,.02)}
+.card-label{font-size:9px;color:rgba(255,255,255,.4);text-transform:uppercase}
+.card-value{font-size:14px;font-weight:700}
+.flow-box{display:inline-block;border:1px solid var(--accent);border-radius:3px;padding:6px 14px;margin:4px;font-size:10px;background:rgba(200,66,10,.08)}
+.flow-arrow{color:var(--accent);margin:0 8px;font-size:14px}
+.checklist{list-style:none;padding:0}.checklist li{padding:4px 0;font-size:11px}.checklist li::before{content:'✓ ';color:var(--accent);font-weight:bold}
+table{width:100%;border-collapse:collapse;margin:12px 0;font-size:11px}
+th{text-align:left;padding:8px;border-bottom:2px solid var(--accent);color:var(--accent);font-size:10px;text-transform:uppercase}
+td{padding:8px;border-bottom:1px solid rgba(255,255,255,.06);color:rgba(255,255,255,.7)}
+footer{margin-top:48px;padding-top:16px;border-top:2px solid var(--accent);font-size:9px;color:rgba(255,255,255,.3)}
+footer a{color:var(--accent);text-decoration:none}
+@media print{body{background:#fff;color:#000}h2{color:#c8420a}}
+@media(max-width:768px){.container{padding:16px}.card-grid{grid-template-columns:1fr}}
+</style></head><body><div class="container">
+
+<header>
+  <h1><em>mcp-server-devops</em> — Architecture</h1>
+  <div class="meta">v1.0.0 · Generated 2026-03-15 · MCP Server for DevOps Operations</div>
+  <div style="margin-top:8px">
+    <span class="badge badge-lang">TypeScript</span>
+    <span class="badge badge-lang">Node.js 20</span>
+    <span class="badge badge-cat">MCP Server</span>
+    <span class="badge badge-cat">DevOps</span>
+    <span class="badge badge-cloud">Docker</span>
+    <span class="badge badge-cloud">Kubernetes</span>
+    <span class="badge badge-cloud">Jenkins</span>
+  </div>
+</header>
+
+<h2>Executive Summary</h2>
+<p>mcp-server-devops is a Model Context Protocol server that exposes six DevOps tools — Docker container management, Docker image building, Helm release listing, Ansible playbook execution, Jenkins build triggering, and Terraform plan summarization — to AI assistants via stdio transport. Built on the MCP SDK with TypeScript, it acts as a bridge between language models and production DevOps tooling, enabling conversational infrastructure operations. Each tool wraps a CLI or API call (Dockerode for container operations, child_process for Helm/Ansible/Terraform, node-fetch for Jenkins REST API) and returns structured JSON results.</p>
+
+<h2>Overview</h2>
+<div class="card-grid">
+  <div class="card"><div class="card-label">Language</div><div class="card-value">TypeScript (ES2022)</div></div>
+  <div class="card"><div class="card-label">Runtime</div><div class="card-value">Node.js &ge; 18</div></div>
+  <div class="card"><div class="card-label">Category</div><div class="card-value">MCP Server</div></div>
+  <div class="card"><div class="card-label">Transport</div><div class="card-value">stdio</div></div>
+  <div class="card"><div class="card-label">Tools Registered</div><div class="card-value">6</div></div>
+  <div class="card"><div class="card-label">Source Files</div><div class="card-value">7 (.ts)</div></div>
+  <div class="card"><div class="card-label">License</div><div class="card-value">MIT</div></div>
+  <div class="card"><div class="card-label">Dependencies</div><div class="card-value">@modelcontextprotocol/sdk, dockerode, node-fetch, yaml, zod</div></div>
+</div>
+
+<h2>Architecture Diagram</h2>
+<div style="text-align:center;padding:24px 0">
+  <div class="flow-box">AI Assistant / Claude</div>
+  <span class="flow-arrow">&#8594;</span>
+  <div class="flow-box">StdioServerTransport</div>
+  <span class="flow-arrow">&#8594;</span>
+  <div class="flow-box">McpServer (index.ts)</div>
+  <br/><br/>
+  <span class="flow-arrow">&#8595;</span>
+  <br/><br/>
+  <div class="flow-box">docker_list_containers</div>
+  <div class="flow-box">docker_build</div>
+  <div class="flow-box">helm_list_releases</div>
+  <br/>
+  <div class="flow-box">ansible_run_playbook</div>
+  <div class="flow-box">jenkins_trigger_build</div>
+  <div class="flow-box">terraform_plan_summary</div>
+  <br/><br/>
+  <span class="flow-arrow">&#8595;</span>
+  <br/><br/>
+  <div class="flow-box">Dockerode API</div>
+  <div class="flow-box">docker CLI</div>
+  <div class="flow-box">helm CLI</div>
+  <div class="flow-box">ansible-playbook CLI</div>
+  <div class="flow-box">Jenkins REST API</div>
+  <div class="flow-box">terraform CLI</div>
+</div>
+
+<h2>Component Breakdown</h2>
+<table>
+  <tr><th>File</th><th>Component</th><th>Purpose</th><th>Interface</th></tr>
+  <tr><td>src/index.ts</td><td>Server Entry</td><td>Creates McpServer, registers all 6 tools, connects via StdioServerTransport</td><td>main()</td></tr>
+  <tr><td>src/tools/docker_list_containers.ts</td><td>docker_list_containers</td><td>Lists Docker containers with status filtering via Dockerode library</td><td>Params: status, host</td></tr>
+  <tr><td>src/tools/docker_build.ts</td><td>docker_build</td><td>Builds Docker image from Dockerfile via docker CLI (child_process)</td><td>Params: contextPath, imageName, dockerfile, buildArgs, noCache</td></tr>
+  <tr><td>src/tools/helm_list_releases.ts</td><td>helm_list_releases</td><td>Lists Helm releases across namespaces via helm CLI</td><td>Params: namespace, filter, kubeContext</td></tr>
+  <tr><td>src/tools/ansible_run_playbook.ts</td><td>ansible_run_playbook</td><td>Executes Ansible playbooks with inventory, extra vars, tags, check mode</td><td>Params: playbookPath, inventory, extraVars, limit, tags, checkMode, verbose</td></tr>
+  <tr><td>src/tools/jenkins_trigger_build.ts</td><td>jenkins_trigger_build</td><td>Triggers Jenkins build jobs via REST API with Basic auth, optional wait for start</td><td>Params: jenkinsUrl, jobName, parameters, token, username, waitForStart</td></tr>
+  <tr><td>src/tools/terraform_plan_summary.ts</td><td>terraform_plan_summary</td><td>Runs terraform plan and parses resource changes into structured summary</td><td>Params: workingDir, varFile, targets, refreshOnly</td></tr>
+  <tr><td>Dockerfile</td><td>Container Image</td><td>Multi-stage build: node:20-alpine builder + runtime with docker-cli, helm, ansible, terraform, curl, bash</td><td>ENTRYPOINT node dist/index.js</td></tr>
+</table>
+
+<h2>Data / Request Flow</h2>
+<ol>
+  <li>AI assistant sends MCP tool-call request over <strong>stdin</strong></li>
+  <li><strong>StdioServerTransport</strong> deserializes the JSON-RPC message</li>
+  <li><strong>McpServer</strong> routes to the matching registered tool handler</li>
+  <li>Tool handler validates input via <strong>Zod schema</strong></li>
+  <li>Handler invokes external system: Dockerode API, child_process exec (helm/ansible/terraform CLI), or node-fetch (Jenkins REST)</li>
+  <li>Response is structured as JSON and returned as MCP text content</li>
+  <li>On error, handler returns <code>isError: true</code> with descriptive message</li>
+</ol>
+
+<h2>Security Controls</h2>
+<ul>
+  <li><strong>Input validation:</strong> All tool parameters validated via Zod schemas with typed constraints</li>
+  <li><strong>Jenkins auth:</strong> Basic authentication with base64-encoded username:token via Authorization header</li>
+  <li><strong>Filesystem checks:</strong> docker_build and ansible_run_playbook verify file existence before execution</li>
+  <li><strong>Buffer limits:</strong> child_process executions capped at 10-20 MB maxBuffer to prevent memory exhaustion</li>
+  <li><strong>Timeouts:</strong> Ansible playbooks capped at 600s, Terraform plan at 300s</li>
+  <li><strong>Docker socket:</strong> Defaults to /var/run/docker.sock; remote hosts connect on port 2375</li>
+  <li><strong>Container isolation:</strong> Dockerfile runs production build with --omit=dev dependencies</li>
+  <li><strong>No secrets in code:</strong> Jenkins credentials passed as tool parameters, not hardcoded</li>
+</ul>
+
+<h2>Industry Adaptation</h2>
+<table>
+  <tr><th>Industry</th><th>Use Case</th><th>Relevant Tools</th></tr>
+  <tr><td>Platform Engineering</td><td>Conversational infrastructure management from IDE</td><td>All 6 tools</td></tr>
+  <tr><td>SRE / Incident Response</td><td>Quick container inspection and Helm release status during incidents</td><td>docker_list_containers, helm_list_releases</td></tr>
+  <tr><td>CI/CD Automation</td><td>AI-triggered build pipelines and deployment validation</td><td>jenkins_trigger_build, docker_build, terraform_plan_summary</td></tr>
+  <tr><td>Configuration Management</td><td>Ansible playbook execution with dry-run capability</td><td>ansible_run_playbook</td></tr>
+  <tr><td>Infrastructure as Code</td><td>Terraform plan review and change summarization</td><td>terraform_plan_summary</td></tr>
+</table>
+
+<h2>Production Readiness Checklist</h2>
+<ul class="checklist">
+  <li>Zod schema validation on all tool inputs</li>
+  <li>Structured error handling with isError flag on every tool</li>
+  <li>Multi-stage Docker build with minimal runtime image (node:20-alpine)</li>
+  <li>Production NODE_ENV=production in container</li>
+  <li>Buffer and timeout limits on all child_process calls</li>
+  <li>TypeScript strict mode with declaration maps and source maps</li>
+  <li>devDependencies excluded from production container (--omit=dev)</li>
+  <li>Jenkins auth via per-request credentials (no stored secrets)</li>
+</ul>
+
+<h2>Config Reference</h2>
+<table>
+  <tr><th>Variable / Parameter</th><th>Scope</th><th>Description</th><th>Default</th></tr>
+  <tr><td>host (docker tools)</td><td>Tool param</td><td>Docker host URL for remote connections</td><td>/var/run/docker.sock</td></tr>
+  <tr><td>jenkinsUrl</td><td>Tool param</td><td>Jenkins server base URL</td><td>Required</td></tr>
+  <tr><td>username / token</td><td>Tool param</td><td>Jenkins API credentials</td><td>Optional</td></tr>
+  <tr><td>kubeContext</td><td>Tool param</td><td>Kubernetes context for Helm operations</td><td>Current context</td></tr>
+  <tr><td>NODE_ENV</td><td>Env var</td><td>Node.js environment mode</td><td>production (Docker)</td></tr>
+  <tr><td>maxBuffer</td><td>Internal</td><td>child_process output buffer limit</td><td>10-20 MB</td></tr>
+</table>
+
+<h2>Deployment</h2>
+<ul>
+  <li><strong>Docker:</strong> <code>docker build -t mcp-server-devops .</code> — multi-stage build installs docker-cli, helm, ansible, terraform into alpine runtime</li>
+  <li><strong>Standalone:</strong> <code>npm ci && npm run build && node dist/index.js</code></li>
+  <li><strong>Dev mode:</strong> <code>npm run dev</code> (ts-node)</li>
+  <li><strong>MCP client config:</strong> Add stdio transport pointing to <code>node dist/index.js</code> or the Docker container</li>
+  <li><strong>Prerequisites:</strong> Docker socket access, helm/ansible/terraform CLIs on PATH (or use Docker image)</li>
+</ul>
+
+<h2>Links</h2>
+<ul>
+  <li>MCP SDK: <a href="https://github.com/modelcontextprotocol/sdk">github.com/modelcontextprotocol/sdk</a></li>
+  <li>Dockerode: <a href="https://github.com/apocas/dockerode">github.com/apocas/dockerode</a></li>
+</ul>
+
+<footer>
+  mcp-server-devops v1.0.0 · Architecture document generated 2026-03-15 · <a href="https://github.com/kogunlowo123">kogunlowo123</a>
+</footer>
+
+</div></body></html>
